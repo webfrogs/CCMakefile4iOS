@@ -146,7 +146,7 @@ sendIMsg :
 		osascript -e "set toAddress to \"$${address}\"" \
 		-e "tell application \"Messages\"" \
 		-e "set theBuddy to buddy toAddress of (first service whose service type is iMessage)" \
-		-e "send \"$(AppName) has been updated. Click to install: $(ItemsURL)\" to theBuddy" \
+		-e "send \"$(AppName) has been updated. Click to install: $(BaseURL)/index.html\" to theBuddy" \
 		-e "end tell" ; \
 	done
 
