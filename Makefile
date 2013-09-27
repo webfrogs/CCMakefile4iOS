@@ -42,6 +42,10 @@ Configuration ?= Release
 #$(shell echo $(CompileOutputPath)/*.app/Info.plist)
 #endef
 
+InfoClr     = \033[01;33m
+ResultClr   = \033[01;32m
+ResetClr    = \033[0m
+
 define AppDisplayName
 $(shell $(PlistBuddyPath) -c 'print CFBundleDisplayName' $(CompileOutputPath)/*.app/Info.plist)
 endef
@@ -64,31 +68,25 @@ UploadPlistPath = $(UploadPath)/$(UploadPlistName)
 
 ItemsURL = itms-services://?action=download-manifest&url=$(BaseURL)/$(UploadPlistName)
 
+
 define html
-'<!DOCTYPE HTML>\
-<html>\
-  <head>\
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />\
-    <title>安装此软件</title>\
-  </head>\
-  <body>\
-	<br>\
-	<br>\
-	<br>\
-	<br>\
-	<p align=center>\
-		<font size="8">\
-			<a href="$(ItemsURL)">点击这里安装</a>\
-		</font>\
-	</p>\
-    </div>\
-  </body>\
-</html>'
+'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">\
+<title>$(AppDisplayName)</title><style type="text/css">body{text-align:center;font-family:"Helvetica";font-size:13px;}ul{text-align:left;}\
+.container{width:280px;margin:0 auto;}h1{margin:0;padding:0;font-size:14px;}.install_button{background-image:-webkit-linear-gradient(top,rgb(126,203,26),rgb(92,149,19));background-origin:padding-box;background-repeat:repeat;-webkit-box-shadow:rgba(0,0,0,0.36) 0px 1px 3px 0px;-webkit-font-smoothing:antialiased;-webkit-user-select:none;background-attachment:scroll;background-clip:border-box;background-color:rgba(0,0,0,0);border-color:#75bc18;border-bottom-left-radius:18px;border-bottom-right-radius:18px;border-bottom-style:none;border-bottom-width:0px;border-left-style:none;border-left-width:0px;border-right-style:none;border-right-width:0px;border-top-left-radius:18px;border-top-right-radius:18px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0,0,0,0.359375) 0px 1px 3px 0px;cursor:pointer;display:inline-block;margin:10px 0;padding:1px;position:relative;-webkit-box-shadow:0 1px 3px rgba(0,0,0,0.36);line-height:50px;margin:.5em auto;}\
+.install_button a{-webkit-box-shadow:rgba(255,255,255,0.25) 0px 1px 0px 0px inset;-webkit-font-smoothing:antialiased;-webkit-user-select:none;background-attachment:scroll;background-clip:border-box;background-color:rgba(0,0,0,0);background-image:-webkit-linear-gradient(top,rgb(195,250,123),rgb(134,216,27) 85%%,rgb(180,231,114));background-origin:padding-box;background-repeat:repeat;border-bottom-color:rgb(255,255,255);border-bottom-left-radius:17px;border-bottom-right-radius:17px;border-bottom-style:none;border-bottom-width:0px;border-left-color:rgb(255,255,255);border-left-style:none;border-left-width:0px;border-right-color:rgb(255,255,255);border-right-style:none;border-right-width:0px;border-top-color:rgb(255,255,255);border-top-left-radius:17px;border-top-right-radius:17px;border-top-style:none;border-top-width:0px;box-shadow:rgba(255,255,255,0.246094) 0px 1px 0px 0px inset;color:#fff;cursor:pointer;display:block;font-size:16px;font-weight:bold;height:36px;line-height:36px;margin:0;padding:0;text-decoration:none;text-shadow:rgba(0,0,0,0.527344) 0px 1px 1px;width:278px;}\
+.icon{border-radius:10px;box-shadow:1px 2px 3px lightgray;width:57px;height:57px;}\
+.release_notes{border:1px solid lightgray;padding:30px 10px 15px 30px;border-radius:8px;overflow:hidden;line-height:1.3em;box-shadow:1px 1px 3px lightgray;}\
+.release_notes:before{font-size:10px;content:"Release Notes";background:lightgray;margin:-31px;float:left;padding:3px 8px;border-radius:4px 0 6px 0;color:white;}\
+footer{font-size:x-small;font-weight:bolder;}</style></head><body><div class="container">\
+<p><img class="icon" src="$(BaseURL)/$(UploadLogoName)"/></p><h1>$(AppDisplayName)</h1><br/>\
+<div class="install_button"><a href="$(ItemsURL)">INSTALL</a></div><br/><br/>\
+<footer>'`date`'</footer>\
+'
 endef
 
 
 all : package uploadFiles
-.PHONY : all compile package uploadFiles plist
+.PHONY : all compile package uploadFiles plist sendEmail sendIMsg
 
 compile :
 	@echo "Start building project."
@@ -127,7 +125,26 @@ plist :
 	@$(PlistBuddyPath) -c "Add :items:0:metadata:bundle-version string \"$(AppBuildVersion)\"" $(UploadPlistPath)
 	@$(PlistBuddyPath) -c "Add :items:0:metadata:bundle-identifier string \"$(AppBuildIdentifier)\"" $(UploadPlistPath)
 	
+sendEmail :
+	@echo "Sending E-mails..."
+	@curl -s --user api:$(MailGunApiKey) \
+		https://api.mailgun.net/v2/$(EmailDomain)/messages \
+		-F from='$(AppDisplayName) <postmaster@$(EmailDomain)>' \
+		-F to=$(MailReceiveList)\
+		-F subject="Test" \
+		-F text='Test send email.' \
+		
+	@echo "\nMails sent."
 
+sendIMsg :
+	@for address in $(IMsgList) ; do \
+		echo "Sending iMessage to $${address}..." ; \
+		osascript -e "set toAddress to \"$${address}\"" \
+		-e "tell application \"Messages\"" \
+		-e "set theBuddy to buddy toAddress of (first service whose service type is iMessage)" \
+		-e "send \"$(AppDisplayName) has been updated.Click to install: $(ItemsURL)\" to theBuddy" \
+		-e "end tell" ; \
+	done
 
 .PHONY : clean
 clean : 
