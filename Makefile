@@ -152,7 +152,7 @@ sendIMsg :
 
 upload :
 	@echo "Uploading...."
-	@scp $(UploadPath)/* $(SftpUser)@$(SftpHost):$(SftpFilePath)
+	@scp $(UploadPath)/* $(ScpUser)@$(ScpHost):$(ScpFilePath)
 	@echo "Upload success."
 
 .PHONY : clean
