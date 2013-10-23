@@ -132,9 +132,9 @@ plist :
 sendEmail :
 	@echo "Sending E-mails..."
 	@curl -s --user api:$(MailGunApiKey) \
-		https://api.mailgun.net/v2/$(EmailDomain)/messages \
-		-F from='$(AppName) <postmaster@$(EmailDomain)>' \
-		-F to=$(MailReceiveList)\
+		https://api.mailgun.net/v2/$(MailGunDomain)/messages \
+		-F from='$(AppName) <postmaster@$(MailGunDomain)>' \
+		-F to=$(MailGunReceiveList)\
 		-F subject="$(AppName) has been updated" \
 		-F text='This email is send by automatical shell created by ccf.Do not reply it directly.' \
 		-F "html=<$(UploadPath)/index.html"	
@@ -152,7 +152,23 @@ sendIMsg :
 
 upload :
 	@echo "Uploading...."
+
+ifneq ($(ScpHost),)
+ifneq ($(ScpUser),)
+ifneq ($(ScpFilePath),)
 	@scp $(UploadPath)/* $(ScpUser)@$(ScpHost):$(ScpFilePath)
+endif
+endif
+endif
+
+ifneq ($(FtpHost),)
+ifneq ($(FtpUser),)
+ifneq ($(FtpPassword),)
+	@cd $(UploadPath); ls -l | awk '/^-/{print $$NF}' | while read filename; do curl -u $(FtpUser):$(FtpPassword) -T $${filename} ftp://$(FtpHost)/$${filename}; done
+endif
+endif
+endif
+
 	@echo "Upload success."
 
 .PHONY : clean
