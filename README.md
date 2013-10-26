@@ -9,7 +9,7 @@ This project can help you to distribute your iOS project automatically by the te
 
 Copy the ```Makefile``` and ```Makefile.cfg``` files to the root path of your iOS project(the same directory with the *.xcodeproj* file).
 
-Then, you can use the ```make``` command as shown below.
+Open the ```Makefile.cfg``` file and edit it. Then, you can use the ```make``` command as shown below.
 
 * ```make``` --- compile and package
 * ```make upload``` --- upload itms-services files 
