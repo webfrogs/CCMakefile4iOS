@@ -46,6 +46,12 @@ InfoClr     = \033[01;33m
 ResultClr   = \033[01;32m
 ResetClr    = \033[0m
 
+CompileCmd = xcodebuild -configuration $(Configuration) CONFIGURATION_BUILD_DIR=$(CompileOutputPath)
+ifneq ($(ProvisioningProfile),)
+CompileCmd += PROVISIONING_PROFILE=$(ProvisioningProfile)
+endif
+
+
 define AppDisplayName
 $(shell $(PlistBuddyPath) -c 'print CFBundleDisplayName' $(CompileOutputPath)/*.app/Info.plist)
 endef
@@ -94,7 +100,8 @@ all : package uploadFiles
 
 compile :
 	@echo "Start building project."
-	@xcodebuild -configuration $(Configuration) CONFIGURATION_BUILD_DIR=$(CompileOutputPath)
+#	@xcodebuild -configuration $(Configuration) CONFIGURATION_BUILD_DIR=$(CompileOutputPath)
+	@$(CompileCmd)
 
 package : compile
 	@echo "Start packaging."
