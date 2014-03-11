@@ -75,7 +75,7 @@ UploadLogoName = logo.png
 
 UploadPlistPath = $(UploadPath)/$(UploadPlistName)
 
-ItemsURL = itms-services://?action=download-manifest&url=$(BaseURL)/$(UploadPlistName)
+ItemsURL = itms-services://?action=download-manifest&url=$(PlistFileHttpsURL)
 
 AppName ?= $(AppDisplayName)
 
@@ -140,6 +140,7 @@ plist :
 	@$(PlistBuddyPath) -c "Add :items:0:metadata:kind string software" $(UploadPlistPath)
 	@$(PlistBuddyPath) -c "Add :items:0:metadata:bundle-version string \"$(AppBuildVersion)\"" $(UploadPlistPath)
 	@$(PlistBuddyPath) -c "Add :items:0:metadata:bundle-identifier string \"$(AppBuildIdentifier)\"" $(UploadPlistPath)
+	@mv $(UploadPlistPath) $(WorkPath)
 	
 sendEmail :
 	@echo "Sending E-mails..."
