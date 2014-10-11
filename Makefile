@@ -48,6 +48,10 @@ ResetClr    = \033[0m
 
 BuildCmdConfig = -configuration $(Configuration) CONFIGURATION_BUILD_DIR=$(CompileOutputPath)
 
+ifneq ($(Scheme),)
+BuildCmdConfig += -scheme $(Scheme)
+endif
+
 ifneq ($(ProvisioningProfile),)
 BuildCmdConfig += PROVISIONING_PROFILE=$(ProvisioningProfile)
 endif
